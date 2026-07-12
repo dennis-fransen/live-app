@@ -16,16 +16,43 @@ to do today."
 
 ## Status
 
-**Planning.** This repository currently contains the V1 specification and
-roadmap only — no application code yet. See:
+**V1 in progress.** The tasks-and-events foundation is built: schema +
+recurrence engine, magic-link auth with auto-provisioned households, the
+tablet-first views (Today / Upcoming / All / Manage) with realtime, and PWA
+setup.
 
 - [`docs/SPEC.md`](docs/SPEC.md) — V1 functional spec, domain model, architecture
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased plan from V1 through greenhouse
-- [`docs/schema.draft.sql`](docs/schema.draft.sql) — concrete draft Postgres schema
+- [`docs/SETUP.md`](docs/SETUP.md) — **clone → running app** setup & deploy guide
 
-## Stack (planned)
+## Quick start
 
-- **Next.js** (App Router) deployed on **Vercel**
+```bash
+cp .env.example .env.local          # add your Supabase URL + anon key
+npm install
+npm run dev                         # http://localhost:3000
+```
+
+You also need to apply the SQL in `supabase/migrations/` to your Supabase
+project — see [`docs/SETUP.md`](docs/SETUP.md) for the full walkthrough.
+
+## Stack
+
+- **Next.js 15** (App Router) deployed on **Vercel**
 - **Supabase** — Postgres, Auth (magic link), Row Level Security, Realtime, `pg_cron`
-- **Tailwind CSS + shadcn/ui** for a touch-friendly, tablet-first UI
-- **PWA** (installable, offline-tolerant) for the mounted household screen
+- **Tailwind CSS v4** for a touch-friendly, tablet-first UI
+- **PWA** (installable) for the mounted household screen
+
+## How it fits together
+
+```
+src/app/              Routes: /today /upcoming /all /manage /login + auth callback
+src/components/        TaskBoard (realtime), TaskCard, tap-to-pick, forms
+src/lib/               Supabase clients (server/browser), types, date + board helpers
+supabase/migrations/   0001 schema · 0002 recurrence engine · 0003 onboarding
+supabase/              setup_realtime_and_cron.sql (run once)
+```
+
+The recurrence engine lives in the database (`complete_occurrence` /
+`skip_occurrence` RPCs + fixed-schedule materialization), so completion and
+re-queue are atomic regardless of which device acts.
