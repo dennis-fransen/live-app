@@ -16,9 +16,46 @@ All schema, functions, seeding, Realtime, and the nightly cron live in
 
 **Recommended — automated via GitHub Actions (no manual SQL):**
 
-The repo ships `.github/workflows/supabase-migrations.yml`. It runs
-`supabase db push` on GitHub's runners whenever migrations change on `main`
-(and on-demand via the Actions tab). Add three repository secrets under
+Create `.github/workflows/supabase-migrations.yml` with the content below. It
+runs `supabase db push` on GitHub's runners whenever migrations change on `main`
+(and on-demand via the Actions tab).
+
+> Note: this file must be added by someone/something with GitHub's `workflow`
+> permission — a Claude Code web session's integration doesn't have it, so add
+> it via GitHub's web "Add file" button or a local commit.
+
+```yaml
+name: Supabase migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch: {}
+
+concurrency:
+  group: supabase-migrations
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Link project
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+      - name: Push migrations
+        run: supabase db push
+```
+
+Add three repository secrets under
 **Settings → Secrets and variables → Actions**:
 
 | Secret | Where to get it |
