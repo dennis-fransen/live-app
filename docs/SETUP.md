@@ -11,30 +11,40 @@ to a running, installable app.
 
 ## 2. Run the database migrations
 
-Apply the SQL in `supabase/migrations/` in order. Two options:
+All schema, functions, seeding, Realtime, and the nightly cron live in
+`supabase/migrations/` (`0001`–`0004`) and are applied by `supabase db push`.
 
-**Option A — SQL editor (quickest):** paste and run each file in order in the
-Supabase SQL editor:
+**Recommended — automated via GitHub Actions (no manual SQL):**
 
-1. `supabase/migrations/0001_schema.sql`
-2. `supabase/migrations/0002_functions.sql`
-3. `supabase/migrations/0003_onboarding.sql`
+The repo ships `.github/workflows/supabase-migrations.yml`. It runs
+`supabase db push` on GitHub's runners whenever migrations change on `main`
+(and on-demand via the Actions tab). Add three repository secrets under
+**Settings → Secrets and variables → Actions**:
 
-**Option B — Supabase CLI:**
+| Secret | Where to get it |
+| --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens |
+| `SUPABASE_DB_PASSWORD` | your project's database password |
+| `SUPABASE_PROJECT_REF` | Project Settings → General (the project ref) |
 
-```bash
-supabase link --project-ref YOUR_PROJECT_REF
-supabase db push
-```
+Push to `main` (or click **Run workflow**) and the migrations deploy
+themselves. Because this runs on GitHub — not the Claude cloud environment — the
+direct Postgres connection `db push` needs works without any proxy/egress
+tweaks.
 
-Then run the one-time post-setup (Realtime + nightly cron):
+**Alternatives:**
 
-- `supabase/setup_realtime_and_cron.sql`
+- **Supabase's native GitHub integration** (dashboard → Integrations → GitHub)
+  reads the same `supabase/migrations/` and applies them on merge, with preview
+  branches per PR. Cleanest, but Branching requires the Pro plan and bills
+  preview branches.
+- **CLI, by hand:** `supabase link --project-ref YOUR_REF && supabase db push`.
+- **SQL editor:** paste `0001`→`0004` in order.
 
-> The cron block needs the **pg_cron** extension (Database → Extensions). If you
-> skip cron, fixed-schedule items (e.g. "Bin day") are still generated for the
-> first 60 days at creation time — you'd just re-run
-> `select materialize_fixed_occurrences();` periodically, or add cron later.
+> `0004` enables Realtime and schedules the nightly fixed-occurrence cron. It is
+> fully guarded, so it is a safe no-op where **pg_cron** or the realtime
+> publication is unavailable. Even without cron, fixed-schedule items (e.g.
+> "Bin day") are generated 60 days ahead at creation time.
 
 ## 3. Configure auth (magic link)
 
@@ -58,10 +68,20 @@ a set of categories, and a few example tasks. Rename the members under
 
 ## 5. Deploy to Vercel
 
-1. Import the repo in Vercel.
-2. Set the env vars `NEXT_PUBLIC_SUPABASE_URL` and
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-3. Deploy. Add the Vercel URL to Supabase's auth redirect allow-list (step 3).
+**Recommended — Vercel's GitHub integration (auto-deploy on push):**
+
+1. Import the repo in Vercel (Add New → Project).
+2. Set env vars `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Deploy. Every push to `main` then redeploys automatically.
+4. Add the resulting Vercel URL to Supabase's auth redirect allow-list (step 3).
+
+Combined with the migrations workflow above, the whole pipeline is
+**push to `main` → migrations apply + app redeploys**, with no manual SQL and no
+deploy tokens living in any session.
+
+**Alternative — scripted deploy:** `scripts/deploy-vercel.sh` does the same via
+the Vercel CLI (needs `VERCEL_TOKEN` + the two Supabase values in the env).
+Handy for one-off or CI deploys outside the GitHub integration.
 
 ## 6. Install as a PWA on the wall tablet
 
