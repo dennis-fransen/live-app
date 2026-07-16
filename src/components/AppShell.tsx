@@ -10,6 +10,7 @@ const NAV = [
   { href: "/upcoming", label: "Upcoming" },
   { href: "/all", label: "All" },
   { href: "/projects", label: "Projects" },
+  { href: "/shopping", label: "Shopping" },
   { href: "/manage", label: "Manage" },
 ] as const;
 
@@ -33,14 +34,14 @@ export function AppShell({
           <div className="flex items-center justify-between gap-4 px-4 pb-3 pt-2">
             <MemberPicker />
           </div>
-          <nav className="flex gap-1 px-2">
+          <nav className="flex gap-1 overflow-x-auto px-2">
             {NAV.map((item) => {
               const isActive = item.href === active;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-t-lg px-4 py-2 text-sm font-medium transition"
+                  className="shrink-0 rounded-t-lg px-4 py-2 text-sm font-medium transition"
                   style={{
                     borderBottom: isActive
                       ? "2px solid var(--accent)"
