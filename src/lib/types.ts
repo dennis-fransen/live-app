@@ -86,3 +86,33 @@ export interface HouseholdContext {
   members: Member[];
   categories: Category[];
 }
+
+export interface Project {
+  id: string;
+  household_id: string;
+  title: string;
+  description: string | null;
+  room: string | null;
+  base_cost: number;
+  sort_order: number;
+  is_done: boolean;
+  created_at: string;
+}
+
+export interface ProjectPart {
+  id: string;
+  household_id: string;
+  project_id: string;
+  title: string;
+  store: string | null;
+  url: string | null;
+  unit_price: number;
+  quantity: number;
+  is_bought: boolean;
+  sort_order: number;
+}
+
+// A project with its parts, as loaded for the board.
+export interface ProjectWithParts extends Project {
+  parts: ProjectPart[];
+}
