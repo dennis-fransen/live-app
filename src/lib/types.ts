@@ -116,3 +116,12 @@ export interface ProjectPart {
 export interface ProjectWithParts extends Project {
   parts: ProjectPart[];
 }
+
+export interface ShoppingItem {
+  id: string;
+  household_id: string;
+  name: string;
+  note: string | null;
+  is_bought: boolean;
+  created_at: string;
+}
