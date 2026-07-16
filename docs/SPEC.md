@@ -206,7 +206,8 @@ glanceable UI.
 
 ## 9. Key data model (summary)
 
-Full DDL in [`schema.draft.sql`](schema.draft.sql). Tables:
+Full DDL in [`supabase/migrations/`](../supabase/migrations/) (`0001_schema.sql`
++ `0002_functions.sql`). Tables:
 
 - `households` — id, name, timezone.
 - `members` — id, household_id, name, color, is_child.

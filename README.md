@@ -50,7 +50,7 @@ src/app/              Routes: /today /upcoming /all /manage /login + auth callba
 src/components/        TaskBoard (realtime), TaskCard, tap-to-pick, forms
 src/lib/               Supabase clients (server/browser), types, date + board helpers
 supabase/migrations/   0001 schema · 0002 recurrence engine · 0003 onboarding
-supabase/              setup_realtime_and_cron.sql (run once)
+                       0004 realtime + nightly cron
 ```
 
 The recurrence engine lives in the database (`complete_occurrence` /

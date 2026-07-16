@@ -1,8 +1,8 @@
 # Life App — Roadmap
 
 Phased plan. Each phase is shippable on its own. The V1 data model
-([SPEC.md](SPEC.md), [schema.draft.sql](schema.draft.sql)) is designed so later
-phases are additive, not rewrites.
+([SPEC.md](SPEC.md), [`supabase/migrations/`](../supabase/migrations/)) is
+designed so later phases are additive, not rewrites.
 
 ---
 

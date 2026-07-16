@@ -116,10 +116,6 @@ Combined with the migrations workflow above, the whole pipeline is
 **push to `main` → migrations apply + app redeploys**, with no manual SQL and no
 deploy tokens living in any session.
 
-**Alternative — scripted deploy:** `scripts/deploy-vercel.sh` does the same via
-the Vercel CLI (needs `VERCEL_TOKEN` + the two Supabase values in the env).
-Handy for one-off or CI deploys outside the GitHub integration.
-
 ## 6. Install as a PWA on the wall tablet
 
 Open the deployed URL on the tablet's browser and choose **Add to Home
