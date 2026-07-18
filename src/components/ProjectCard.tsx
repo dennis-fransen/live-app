@@ -310,74 +310,78 @@ function PartRow({
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-2 text-sm">
-      <input
-        type="checkbox"
-        checked={part.is_bought}
-        onChange={(e) => patch({ is_bought: e.target.checked })}
-        className="h-5 w-5 shrink-0 accent-[var(--accent)]"
-        aria-label="Bought"
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
+    <div className="flex flex-col gap-2 rounded-xl border border-[var(--border)] p-2 text-sm sm:flex-row sm:items-center">
+      {/* Title line: checkbox + name (+ store) */}
+      <div className="flex min-w-0 flex-1 items-start gap-2">
+        <input
+          type="checkbox"
+          checked={part.is_bought}
+          onChange={(e) => patch({ is_bought: e.target.checked })}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--accent)]"
+          aria-label="Bought"
+        />
+        <div className="min-w-0 flex-1">
           <span
-            className="truncate"
+            className="break-words font-medium sm:truncate sm:font-normal"
             style={{ textDecoration: part.is_bought ? "line-through" : undefined }}
           >
             {part.title}
           </span>
-          {part.url && (
-            <a
-              href={part.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-[var(--accent)]"
-              aria-label="Open link"
-            >
-              ↗
-            </a>
-          )}
+          {part.store && <div className="text-xs text-[var(--muted)]">{part.store}</div>}
         </div>
-        {part.store && <div className="text-xs text-[var(--muted)]">{part.store}</div>}
       </div>
 
-      <input
-        key={`qty:${part.id}:${part.quantity}`}
-        type="number"
-        min={1}
-        step="1"
-        defaultValue={part.quantity}
-        onBlur={(e) => {
-          const q = Math.max(1, Math.floor(Number(e.target.value) || 1));
-          if (q !== part.quantity) patch({ quantity: q });
-        }}
-        className="w-12 rounded-lg border border-[var(--border)] bg-transparent px-1 py-1 text-center outline-none focus:border-[var(--accent)]"
-        aria-label="Quantity"
-      />
-      <span className="text-[var(--muted)]">×</span>
-      <input
-        key={`price:${part.id}:${part.unit_price}`}
-        type="number"
-        min={0}
-        step="1"
-        defaultValue={part.unit_price}
-        onBlur={(e) => {
-          const p = Math.max(0, Number(e.target.value) || 0);
-          if (p !== part.unit_price) patch({ unit_price: p });
-        }}
-        className="w-20 rounded-lg border border-[var(--border)] bg-transparent px-1 py-1 text-right outline-none focus:border-[var(--accent)]"
-        aria-label="Unit price"
-      />
-      <span className="w-20 shrink-0 text-right font-medium">
-        {formatMoney(partLineTotal(part))}
-      </span>
-      <button
-        onClick={remove}
-        className="shrink-0 px-1 text-[var(--overdue)] hover:opacity-70"
-        aria-label="Remove part"
-      >
-        ✕
-      </button>
+      {/* Controls line: amount · link · price · total */}
+      <div className="flex items-center gap-2 pl-7 sm:pl-0">
+        <input
+          key={`qty:${part.id}:${part.quantity}`}
+          type="number"
+          min={1}
+          step="1"
+          defaultValue={part.quantity}
+          onBlur={(e) => {
+            const q = Math.max(1, Math.floor(Number(e.target.value) || 1));
+            if (q !== part.quantity) patch({ quantity: q });
+          }}
+          className="w-12 rounded-lg border border-[var(--border)] bg-transparent px-1 py-1 text-center outline-none focus:border-[var(--accent)]"
+          aria-label="Quantity"
+        />
+        <span className="text-[var(--muted)]">×</span>
+        <input
+          key={`price:${part.id}:${part.unit_price}`}
+          type="number"
+          min={0}
+          step="1"
+          defaultValue={part.unit_price}
+          onBlur={(e) => {
+            const p = Math.max(0, Number(e.target.value) || 0);
+            if (p !== part.unit_price) patch({ unit_price: p });
+          }}
+          className="w-20 rounded-lg border border-[var(--border)] bg-transparent px-1 py-1 text-right outline-none focus:border-[var(--accent)]"
+          aria-label="Unit price"
+        />
+        {part.url && (
+          <a
+            href={part.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 text-[var(--accent)]"
+            aria-label="Open link"
+          >
+            ↗
+          </a>
+        )}
+        <span className="ml-auto w-20 shrink-0 text-right font-medium sm:ml-0">
+          {formatMoney(partLineTotal(part))}
+        </span>
+        <button
+          onClick={remove}
+          className="shrink-0 px-1 text-[var(--overdue)] hover:opacity-70"
+          aria-label="Remove part"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 }
