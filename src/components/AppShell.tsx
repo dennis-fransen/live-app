@@ -1,28 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ActiveMemberProvider, MemberPicker } from "@/components/ActiveMember";
 import { SignOutButton } from "@/components/SignOutButton";
 import type { HouseholdContext } from "@/lib/types";
-
-type NavLink = { href: string; label: string };
-type NavGroup = { label: string; children: readonly NavLink[] };
-type NavItem = NavLink | NavGroup;
-
-const NAV: readonly NavItem[] = [
-  {
-    label: "Tasks",
-    children: [
-      { href: "/today", label: "Today" },
-      { href: "/upcoming", label: "Upcoming" },
-      { href: "/all", label: "All" },
-    ],
-  },
-  { href: "/projects", label: "Projects" },
-  { href: "/shopping", label: "Shopping" },
-  { href: "/manage", label: "Manage" },
-] as const;
 
 type NavHref =
   | "/today"
@@ -32,9 +13,25 @@ type NavHref =
   | "/shopping"
   | "/manage";
 
-function isGroup(item: NavItem): item is NavGroup {
-  return "children" in item;
-}
+type NavLink = { href: NavHref; label: string };
+
+// The default task view the primary "Tasks" tab links to.
+const TASKS_DEFAULT: NavHref = "/today";
+
+const TASK_VIEWS: readonly NavLink[] = [
+  { href: "/today", label: "Today" },
+  { href: "/upcoming", label: "Upcoming" },
+  { href: "/all", label: "All" },
+] as const;
+
+const TASK_HREFS = TASK_VIEWS.map((v) => v.href) as readonly NavHref[];
+
+const PRIMARY_NAV: readonly NavLink[] = [
+  { href: TASKS_DEFAULT, label: "Tasks" },
+  { href: "/projects", label: "Projects" },
+  { href: "/shopping", label: "Shopping" },
+  { href: "/manage", label: "Manage" },
+] as const;
 
 const tabClass =
   "shrink-0 rounded-t-lg px-4 py-2 text-sm font-medium transition";
@@ -48,26 +45,7 @@ export function AppShell({
   active: NavHref;
   children: React.ReactNode;
 }) {
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const navRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!openGroup) return;
-    function handlePointerDown(event: PointerEvent) {
-      if (navRef.current && !navRef.current.contains(event.target as Node)) {
-        setOpenGroup(null);
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpenGroup(null);
-    }
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [openGroup]);
+  const tasksActive = TASK_HREFS.includes(active);
 
   return (
     <ActiveMemberProvider members={ctx.members}>
@@ -80,81 +58,13 @@ export function AppShell({
           <div className="flex items-center justify-between gap-4 px-4 pb-3 pt-2">
             <MemberPicker />
           </div>
-          <nav ref={navRef} className="flex gap-1 overflow-x-auto px-2">
-            {NAV.map((item) => {
-              if (isGroup(item)) {
-                const groupActive = item.children.some(
-                  (child) => child.href === active,
-                );
-                const isOpen = openGroup === item.label;
-                return (
-                  <div key={item.label} className="relative shrink-0">
-                    <button
-                      type="button"
-                      aria-haspopup="menu"
-                      aria-expanded={isOpen}
-                      onClick={() =>
-                        setOpenGroup(isOpen ? null : item.label)
-                      }
-                      className={`${tabClass} flex items-center gap-1`}
-                      style={{
-                        borderBottom: groupActive
-                          ? "2px solid var(--accent)"
-                          : "2px solid transparent",
-                        color:
-                          groupActive || isOpen
-                            ? "var(--text)"
-                            : "var(--muted)",
-                      }}
-                    >
-                      {item.label}
-                      <span
-                        aria-hidden
-                        className="text-xs transition-transform"
-                        style={{
-                          transform: isOpen ? "rotate(180deg)" : "none",
-                        }}
-                      >
-                        ▾
-                      </span>
-                    </button>
-                    {isOpen && (
-                      <div
-                        role="menu"
-                        className="absolute left-0 top-full z-20 mt-1 min-w-40 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg)] py-1 shadow-lg"
-                      >
-                        {item.children.map((child) => {
-                          const childActive = child.href === active;
-                          return (
-                            <Link
-                              key={child.href}
-                              role="menuitem"
-                              href={child.href}
-                              onClick={() => setOpenGroup(null)}
-                              className="block px-4 py-2 text-sm font-medium transition hover:bg-[var(--border)]/40"
-                              style={{
-                                color: childActive
-                                  ? "var(--text)"
-                                  : "var(--muted)",
-                                borderLeft: childActive
-                                  ? "2px solid var(--accent)"
-                                  : "2px solid transparent",
-                              }}
-                            >
-                              {child.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              const isActive = item.href === active;
+          <nav className="flex gap-1 overflow-x-auto px-2">
+            {PRIMARY_NAV.map((item) => {
+              const isActive =
+                item.label === "Tasks" ? tasksActive : item.href === active;
               return (
                 <Link
-                  key={item.href}
+                  key={item.label}
                   href={item.href}
                   className={tabClass}
                   style={{
@@ -169,6 +79,31 @@ export function AppShell({
               );
             })}
           </nav>
+          {tasksActive && (
+            <nav className="flex gap-2 overflow-x-auto border-t border-[var(--border)] bg-[var(--bg)]/60 px-4 py-2">
+              {TASK_VIEWS.map((view) => {
+                const isActive = view.href === active;
+                return (
+                  <Link
+                    key={view.href}
+                    href={view.href}
+                    className="shrink-0 rounded-full px-3 py-1 text-sm font-medium transition"
+                    style={{
+                      backgroundColor: isActive
+                        ? "var(--accent)"
+                        : "transparent",
+                      color: isActive ? "var(--bg)" : "var(--muted)",
+                      border: isActive
+                        ? "1px solid var(--accent)"
+                        : "1px solid var(--border)",
+                    }}
+                  >
+                    {view.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </header>
         <main className="flex-1 px-4 py-4">{children}</main>
       </div>
