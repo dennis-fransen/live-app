@@ -46,11 +46,13 @@ project — see [`docs/SETUP.md`](docs/SETUP.md) for the full walkthrough.
 ## How it fits together
 
 ```
-src/app/              Routes: /today /upcoming /all /projects /shopping /manage /login
-src/components/        TaskBoard, TaskCard, ProjectsBoard, ProjectCard, ShoppingList, forms
-src/lib/               Supabase clients (server/browser), types, date + board/project helpers
+src/app/              Routes: /today /upcoming /all /projects /shopping /recipes /manage /login
+src/components/        TaskBoard, TaskCard, ProjectsBoard, ProjectCard, ShoppingList,
+                       RecipesBoard, RecipeCard, forms
+src/lib/               Supabase clients (server/browser), types, date + board/project/recipe helpers
 supabase/migrations/   0001 schema · 0002 recurrence engine · 0003 onboarding
                        0004 realtime + nightly cron · 0005 projects · 0006 shopping list
+                       0007 recipes
 ```
 
 The recurrence engine lives in the database (`complete_occurrence` /
