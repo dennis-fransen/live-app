@@ -24,6 +24,7 @@ setup.
 - [`docs/SPEC.md`](docs/SPEC.md) — V1 functional spec, domain model, architecture
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased plan from V1 through greenhouse
 - [`docs/SETUP.md`](docs/SETUP.md) — **clone → running app** setup & deploy guide
+- [`docs/MCP.md`](docs/MCP.md) — the recipe-import MCP server (add recipes via an agent)
 
 ## Quick start
 
@@ -47,9 +48,11 @@ project — see [`docs/SETUP.md`](docs/SETUP.md) for the full walkthrough.
 
 ```
 src/app/              Routes: /today /upcoming /all /projects /shopping /recipes /manage /login
+src/app/api/[transport]/  MCP server endpoint (/api/mcp) — import recipes via an agent
 src/components/        TaskBoard, TaskCard, ProjectsBoard, ProjectCard, ShoppingList,
                        RecipesBoard, RecipeCard, forms
-src/lib/               Supabase clients (server/browser), types, date + board/project/recipe helpers
+src/lib/               Supabase clients (server/browser/service), types, date +
+                       board/project/recipe helpers, recipe-import
 supabase/migrations/   0001 schema · 0002 recurrence engine · 0003 onboarding
                        0004 realtime + nightly cron · 0005 projects · 0006 shopping list
                        0007 recipes
