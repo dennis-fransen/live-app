@@ -125,3 +125,41 @@ export interface ShoppingItem {
   is_bought: boolean;
   created_at: string;
 }
+
+export interface Recipe {
+  id: string;
+  household_id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  recipe_yield: string | null;
+  prep_minutes: number | null;
+  cook_minutes: number | null;
+  source: string | null;
+  is_favorite: boolean;
+  is_archived: boolean;
+  created_at: string;
+}
+
+export interface RecipeIngredient {
+  id: string;
+  household_id: string;
+  recipe_id: string;
+  amount: string | null;
+  name: string;
+  sort_order: number;
+}
+
+export interface RecipeStep {
+  id: string;
+  household_id: string;
+  recipe_id: string;
+  body: string;
+  sort_order: number;
+}
+
+// A recipe with its ingredients and steps, as loaded for the board.
+export interface RecipeWithDetails extends Recipe {
+  ingredients: RecipeIngredient[];
+  steps: RecipeStep[];
+}

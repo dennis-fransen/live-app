@@ -11,6 +11,7 @@ type NavHref =
   | "/all"
   | "/projects"
   | "/shopping"
+  | "/recipes"
   | "/manage";
 
 type NavLink = { href: NavHref; label: string };
@@ -30,6 +31,7 @@ const PRIMARY_NAV: readonly NavLink[] = [
   { href: TASKS_DEFAULT, label: "Tasks" },
   { href: "/projects", label: "Projects" },
   { href: "/shopping", label: "Shopping" },
+  { href: "/recipes", label: "Recipes" },
   { href: "/manage", label: "Manage" },
 ] as const;
 

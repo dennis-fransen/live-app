@@ -58,6 +58,21 @@ completion date.
 
 ---
 
+## Phase 3.5 — Recipes (the household recipe box)
+
+The things we make ourselves, again and again — sourdough, jam from the berries,
+pickles, weeknight dinners — in one place on the kitchen tablet.
+
+- **Recipes**: title, category (Bread, Jelly & preserves…), yield, prep/cook
+  times, source (URL or book), notes; favorite + archive.
+- **Ordered ingredients** and **ordered steps** as their own rows, so the tablet
+  can render a large-type, check-as-you-go cooking view for messy hands.
+- **Add to shopping**: one tap pushes a recipe's ingredients onto the shared
+  shopping list (Phase 3) — the "what do I need to make jam this weekend" flow.
+- Reference-only: recipes don't use the recurrence engine. A recurring "bake
+  bread Saturday" stays a task; a future optional `recipe_id` on a task
+  definition can link the two.
+
 ## Phase 4 — Greenhouse / food production
 
 The big one. Turns the app into a growing companion.
