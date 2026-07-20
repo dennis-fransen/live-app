@@ -31,9 +31,17 @@ language, any unit style) into a clean schema far better than a fixed scraper.
 - **Storage:** `src/lib/recipes-import.ts` + a service-role Supabase client
   (`src/lib/supabase/service.ts`). The service role **bypasses RLS**, so it is
   server-only and reachable only through the bearer-guarded route.
-- **Auth:** a shared bearer token (`MCP_AUTH_TOKEN`). The endpoint fails closed
-  if the token is unset, and `/api/*` is exempt from the login-redirect
-  middleware so the endpoint can authenticate itself.
+- **Auth:** two accepted credentials — a shared bearer token (`MCP_AUTH_TOKEN`)
+  for Claude Code, and OAuth access tokens for claude.ai connectors (see below).
+  The endpoint fails closed if neither is valid. `/api/*` and `/.well-known/*`
+  are exempt from the login-redirect middleware so the endpoint and its OAuth
+  discovery documents are reachable.
+- **OAuth server:** claude.ai custom connectors authenticate via OAuth, not a
+  static header, so the app hosts a tiny OAuth 2.0 authorization server
+  (`src/app/api/oauth/*`, `src/lib/oauth.ts`): dynamic client registration +
+  PKCE authorization-code flow, gated by a household password. Access/refresh
+  tokens are signed JWTs (no token storage); one-time codes + registered
+  clients live in the `oauth_codes` / `oauth_clients` tables (migration 0008).
 
 ## Configuration
 
@@ -41,18 +49,23 @@ Set these (server-only) env vars — locally in `.env.local`, and in the Vercel
 project settings for production:
 
 ```bash
-SUPABASE_SERVICE_ROLE_KEY=...          # Supabase → Project Settings → API
-HOUSEHOLD_ID=...                       # the households.id row to write into
-MCP_AUTH_TOKEN=$(openssl rand -hex 32) # the shared secret
-# NEXT_PUBLIC_SITE_URL=https://your-app  # optional, for deep links back to a recipe
+SUPABASE_SERVICE_ROLE_KEY=...            # Supabase → Project Settings → API
+HOUSEHOLD_ID=...                         # the households.id row to write into
+MCP_AUTH_TOKEN=$(openssl rand -hex 32)   # bearer for Claude Code
+OAUTH_JWT_SECRET=$(openssl rand -hex 32) # signs OAuth tokens (claude.ai)
+MCP_OAUTH_PASSWORD=...                    # typed on the connector approval screen
+# NEXT_PUBLIC_SITE_URL=https://your-app   # optional, for deep links back to a recipe
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` and `MCP_AUTH_TOKEN` are secrets — never expose them
-to the browser or commit them.
+`SUPABASE_SERVICE_ROLE_KEY`, `MCP_AUTH_TOKEN`, and `OAUTH_JWT_SECRET` are
+secrets — never expose them to the browser or commit them. Apply migration
+`0008_mcp_oauth.sql` before using the claude.ai connector.
 
 ## Connecting a client
 
-**Claude Code** — add to `.mcp.json` (or `claude mcp add`):
+### Claude Code (static bearer)
+
+Add to `.mcp.json` (or `claude mcp add`) — Claude Code can send a custom header:
 
 ```json
 {
@@ -66,11 +79,22 @@ to the browser or commit them.
 }
 ```
 
-**claude.ai** — add a custom connector pointing at the same URL, with an
-`Authorization: Bearer …` header.
+### claude.ai — web, mobile & desktop (OAuth connector)
 
-Then just ask: *"Add this recipe to our app: https://…"*. The agent will read
-the page, optionally `find_recipe` first to avoid a duplicate, and
+The custom-connector UI doesn't accept a static header, so it uses the OAuth
+flow above. Add the connector **from web or desktop** (you can't add new ones on
+mobile, but once added it syncs to the mobile apps and works there):
+
+1. **Settings → Connectors → Add → "Add custom connector".**
+2. URL: `https://your-app.vercel.app/api/mcp`. Leave Advanced settings empty —
+   the server does dynamic client registration, so no client ID/secret needed.
+3. Click **Connect**. You'll be sent to the approval page; enter
+   `MCP_OAUTH_PASSWORD`. Claude stores the resulting token and reconnects.
+
+One connector covers web, desktop, and the iOS/Android apps (it's account-level).
+
+Then, on any surface, just ask: *"Add this recipe to our app: https://…"*. The
+agent reads the page, optionally `find_recipe` first to avoid a duplicate, and
 `create_recipe`.
 
 ## Local check

@@ -35,11 +35,13 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   // /api routes authenticate themselves (the MCP endpoint uses a bearer token,
-  // not the cookie session), so they must not be redirected to /login.
+  // not the cookie session), so they must not be redirected to /login. The
+  // /.well-known/* OAuth discovery documents must be publicly reachable too.
   const isPublic =
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/api");
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/.well-known");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

@@ -3,6 +3,7 @@ import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
+import { OAUTH_SCOPE, verifyToken as verifyOAuthToken } from "@/lib/oauth";
 import {
   createRecipeFromPayload,
   findRecipesByTitle,
@@ -145,11 +146,16 @@ const baseHandler = createMcpHandler(
   { basePath: "/api" },
 );
 
-// ---- Auth: a shared bearer token guards the whole endpoint ------------------
-// Set MCP_AUTH_TOKEN to a long random secret and send it as
-// `Authorization: Bearer <token>` from the MCP client. Fails closed if the
-// token is unset, so the endpoint is never open by accident.
-function tokenIsValid(provided: string | undefined): boolean {
+// ---- Auth: two accepted credentials -----------------------------------------
+// 1. A static shared bearer (MCP_AUTH_TOKEN) — simplest, used by Claude Code
+//    (which can send a custom Authorization header).
+// 2. An OAuth access token (signed JWT) minted by our own /api/oauth flow — used
+//    by claude.ai custom connectors (web/mobile/desktop), which speak OAuth and
+//    can't send a static header. See src/lib/oauth.ts and src/app/api/oauth/*.
+// Fails closed: with neither a valid static token nor a valid OAuth token, the
+// request is rejected (401 with the protected-resource pointer for OAuth
+// discovery).
+function staticTokenIsValid(provided: string | undefined): boolean {
   const expected = process.env.MCP_AUTH_TOKEN;
   if (!expected || !provided) return false;
   const a = Buffer.from(provided);
@@ -162,8 +168,15 @@ async function verifyToken(
   _req: Request,
   bearerToken?: string,
 ): Promise<AuthInfo | undefined> {
-  if (!tokenIsValid(bearerToken)) return undefined;
-  return { token: bearerToken!, clientId: "household", scopes: [] };
+  if (!bearerToken) return undefined;
+  if (staticTokenIsValid(bearerToken)) {
+    return { token: bearerToken, clientId: "claude-code", scopes: [OAUTH_SCOPE] };
+  }
+  const claims = await verifyOAuthToken(bearerToken, "access");
+  if (claims) {
+    return { token: bearerToken, clientId: "oauth", scopes: [OAUTH_SCOPE] };
+  }
+  return undefined;
 }
 
 const handler = withMcpAuth(baseHandler, verifyToken, { required: true });
