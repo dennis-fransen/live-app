@@ -34,8 +34,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  // /api routes authenticate themselves (the MCP endpoint uses a bearer token,
+  // not the cookie session), so they must not be redirected to /login.
   const isPublic =
-    pathname.startsWith("/login") || pathname.startsWith("/auth");
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
